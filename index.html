@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Chat Room</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body onload="connect();">
+<h1> Chat Room </h1>
+<textarea id="messages" class="panel message-area" disabled="true"></textarea>
+<div class="panel input-area">
+    <input id="userName" class="text-field" type="text" placeholder="Name"/>
+<input id="messageInput" class="text-field" type="text" placeholder="Message"
+onkeydown="var VK_RETURN = 13; if (KeyboardEvent.keyCode == VK_RETURN ) sendMessage();" />
+<input class="button" type="submit" value="Send" onclick="sendMessage();" />
+</div>
+
+<script>
+    // Websocket Endpoint url
+var endPointURL = "ws://127.0.0.1:8888";
+var chatClient = null;
+function connect () {
+chatClient = new WebSocket(endPointURL,"wamp");
+chatClient.onopen = function(m) {  
+                console.log("Соединение открыто...");
+              }
+chatClient.onmessage = function (event) {
+var messagesArea = document.getElementById("messages");
+var jsonObj = JSON.parse(event.data);
+var message = jsonObj.user + ": " + jsonObj.message + "\r\n";
+messagesArea.value = messagesArea.value + message;
+messagesArea.scrollTop = messagesArea.scrollHeight;
+};
+}
+function disconnect () {
+chatClient.close();
+}
+function sendMessage() {
+var user = document.getElementById("userName").value.trim();
+if (user === "")
+alert ("Please enter your name!");
+var inputElement = document.getElementById("messageInput");
+var message = inputElement.value.trim();
+if (message !== "") {
+var jsonObj = {"user" : user, "message" : message};
+
+chatClient.send(JSON.stringify(jsonObj));
+inputElement.value = "";
+}
+inputElement.focus();
+}
+</script>
+
+</body>
+</html>
